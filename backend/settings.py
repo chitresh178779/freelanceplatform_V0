@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     #apps installed seperately
     'rest_framework',
     'corsheaders',
-
+    'api',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -128,3 +128,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:3000","http://127.0.0.1:3000",]
+
+AUTH_USER_MODEL = 'api.User'
