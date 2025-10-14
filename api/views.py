@@ -1,10 +1,11 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User
-from .serializers import UserSerializer
+from .models import User, Project
+from .serializers import UserSerializer, ProjectSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from .permissions import IsClient
 
 # Create your views here.
 #registration view abstraction class
@@ -36,3 +37,24 @@ class UserProfileView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
+    
+class ProjectListCreateView(generics.ListCreateAPIView):
+    queryset = Project.objects.all().order_by('-created_at') # Show newest projects first
+    serializer_class = ProjectSerializer
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.request.method == 'POST':
+            # Only authenticated clients can create projects
+            return [IsAuthenticated(), IsClient()]
+        # Anyone can view the list of projects
+        return []
+
+    def perform_create(self, serializer):
+        """
+        This method is called when a new project is created.
+        We automatically assign the logged-in user as the project's client.
+        """
+        serializer.save(client=self.request.user)

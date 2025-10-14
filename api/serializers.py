@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Project
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,3 +17,14 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+    
+class ProjectSerializer(serializers.ModelSerializer):
+    # To display the client's username in the project list (read-only)
+    client_username = serializers.ReadOnlyField(source='client.username')
+
+    class Meta:
+        model = Project
+        fields = ['id', 'title', 'description', 'budget', 'status', 'client', 'client_username', 'created_at']
+        # The 'client' field should not be sent by the user,
+        # it will be automatically set from the logged-in user.
+        read_only_fields = ['client', 'status', 'created_at']
