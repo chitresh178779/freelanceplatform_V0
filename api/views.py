@@ -5,6 +5,8 @@ from .models import User, Project
 from .serializers import UserSerializer, ProjectSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from .permissions import IsClient
 
 # Create your views here.
@@ -57,4 +59,24 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         This method is called when a new project is created.
         We automatically assign the logged-in user as the project's client.
         """
+        serializer.save(client=self.request.user)
+
+class ProjectListCreateView(generics.ListCreateAPIView):
+    queryset = Project.objects.filter(status=Project.Status.OPEN).order_by('-created_at') # Only show OPEN projects
+    serializer_class = ProjectSerializer
+
+    # --- ADD THESE FILTERING/SEARCHING/SORTING SETTINGS ---
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'client__username'] # Fields available for exact filtering
+    search_fields = ['title', 'description', 'skills_required'] # Fields available for keyword search
+    ordering_fields = ['created_at', 'budget'] # Fields available for sorting
+    ordering = ['-created_at'] # Default sort order
+    # --- END ADDED SETTINGS ---
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsClient()]
+        return [] # No permissions needed for GET (listing projects)
+
+    def perform_create(self, serializer):
         serializer.save(client=self.request.user)

@@ -24,7 +24,27 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'budget', 'status', 'client', 'client_username', 'created_at']
-        # The 'client' field should not be sent by the user,
-        # it will be automatically set from the logged-in user.
-        read_only_fields = ['client', 'status', 'created_at']
+        fields = [
+            'id', 
+            'title', 
+            'description', 
+            'budget', 
+            'status', 
+            'client', 
+            'client_username', 
+            'freelancer', # Include freelancer field
+            'category', # ADDED category
+            'skills_required', # ADDED skills_required
+            'created_at',
+            'updated_at' # Include updated_at
+        ]
+        # Make sure client, status, created_at, updated_at, category_display and freelancer are read-only during creation
+        # category and skills_required MUST BE WRITABLE (i.e., NOT in read_only_fields)
+        read_only_fields = [
+            'client', 
+            'client_username', 
+            'status', 
+            'created_at', 
+            'updated_at', 
+            'freelancer' # Freelancer is assigned later, not on creation
+        ]
