@@ -3,6 +3,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model # Import this
+from django.core.exceptions import ValidationError
+from django.conf import settings
 
 class User(AbstractUser):
     class Role(models.TextChoices):
@@ -61,3 +63,53 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+    
+class Bid(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        ACCEPTED = 'accepted', 'Accepted'
+        REJECTED = 'rejected', 'Rejected'
+
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='bids' # Allows easy access: project.bids.all()
+    )
+    # Ensure only Freelancers can bid
+    freelancer = models.ForeignKey(
+        # settings.AUTH_USER_MODEL, # Alternative way to reference user model
+        ActiveUser,
+        on_delete=models.CASCADE,
+        related_name='bids',
+        limit_choices_to={'role': User.Role.FREELANCER} # Restrict FK choices
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Your proposed bid amount for the project."
+    )
+    proposal = models.TextField(
+        help_text="Explain why you are a good fit for this project."
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Ensure a freelancer can bid only once per project
+        unique_together = ('project', 'freelancer')
+        ordering = ['-created_at'] # Show newest bids first by default
+
+    def clean(self):
+        # Additional validation: Ensure the bidder is actually a freelancer
+        if self.freelancer.role != User.Role.FREELANCER:
+            raise ValidationError("Only users with the 'FREELANCER' role can place bids.")
+        # Ensure bids can only be placed on OPEN projects
+        if self.project.status != Project.Status.OPEN:
+             raise ValidationError("Bids can only be placed on projects with 'OPEN' status.")
+
+    def __str__(self):
+        return f"Bid by {self.freelancer.username} on {self.project.title} for ${self.amount}"

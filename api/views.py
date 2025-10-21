@@ -1,15 +1,28 @@
-from rest_framework import generics
+from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User, Project
-from .serializers import UserSerializer, ProjectSerializer
+from .models import User, Project, Bid
+from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from .permissions import IsClient
+from .permissions import IsClient, IsFreelancer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.shortcuts import get_object_or_404 # Import this
+from django.core.exceptions import ValidationError # Import this
 
 # Create your views here.
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials, including
+    custom user data (username, role).
+    """
+    serializer_class = MyTokenObtainPairSerializer
+
 #registration view abstraction class
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -80,3 +93,46 @@ class ProjectListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(client=self.request.user)
+
+class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = 'pk'
+
+class BidCreateView(generics.CreateAPIView):
+    """
+    API view for freelancers to create a bid on a specific project.
+    Accessible via /api/projects/<project_pk>/bid/
+    """
+    serializer_class = BidSerializer
+    permission_classes = [IsAuthenticated, IsFreelancer] # Must be logged in and a freelancer
+
+    def perform_create(self, serializer):
+        # Get project from URL parameter 'project_pk'
+        project_pk = self.kwargs.get('project_pk')
+        project = get_object_or_404(Project, pk=project_pk)
+        
+        # Get freelancer from the request user
+        freelancer = self.request.user
+
+        # Create a temporary Bid instance to run model validation
+        bid_instance = Bid(
+            project=project,
+            freelancer=freelancer,
+            amount=serializer.validated_data.get('amount'),
+            proposal=serializer.validated_data.get('proposal')
+        )
+        
+        try:
+            bid_instance.clean() # Manually call model's clean method
+        except ValidationError as e:
+            # Re-raise as DRF ValidationError
+            raise serializers.ValidationError(e.message_dict)
+
+        # Check if freelancer already bid on this project (handled by unique_together, but good practice)
+        if Bid.objects.filter(project=project, freelancer=freelancer).exists():
+            raise serializers.ValidationError("You have already placed a bid on this project.")
+
+        # Save the bid, automatically setting the freelancer and project
+        serializer.save(freelancer=freelancer, project=project)
