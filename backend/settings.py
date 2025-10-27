@@ -9,13 +9,30 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os # Import os
 from pathlib import Path
+from dotenv import load_dotenv
+import stripe
+ 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env')
+# --- UPDATE STRIPE KEYS ---
+# Stripe API Keys (Loaded from environment variables)
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_ENDPOINT_SECRET = os.getenv('STRIPE_ENDPOINT_SECRET')
+# --- END UPDATE ---
 
+# Add checks to ensure keys are loaded (optional but recommended)
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+    print(f"DEBUG: Stripe Key Loaded: {STRIPE_SECRET_KEY[:10]}...") # Print first 10 chars for confirmation
+else:
+    print("ERROR: STRIPE_SECRET_KEY not found in environment!")
+    # raise ImproperlyConfigured("STRIPE_SECRET_KEY not found...")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -32,6 +49,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     #apps installed seperately
+    'channels',
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt',
@@ -74,7 +92,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.wsgi.application'
 
 
 # Database
@@ -147,3 +165,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10 # Show 10 projects per page
     # --- END ADDED LINES ---
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+

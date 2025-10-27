@@ -6,20 +6,103 @@ from django.contrib.auth import get_user_model # Import this
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
+
+# --- NEW: Skill Model ---
+class Skill(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class User(AbstractUser):
     class Role(models.TextChoices):
         CLIENT = "CLIENT", "Client"
         FREELANCER = "FREELANCER", "Freelancer"
 
-    # We don't need a separate first/last name, username will be the primary identifier
-    # We can use the default email, password fields from AbstractUser
+    # --- ADD Availability Choices ---
+    class Availability(models.TextChoices):
+        AVAILABLE = 'available', 'Available for Hire'
+        BUSY = 'busy', 'Currently Busy'
+        NOT_AVAILABLE = 'not_available', 'Not Available'
+
     name = models.CharField(max_length=255)
     role = models.CharField(max_length=50, choices=Role.choices)
+    stripe_account_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
+
+    # --- UPDATED/ADDED PROFILE FIELDS ---
+    profile_picture = models.ImageField(
+        upload_to='profile_pics/',
+        null=True,
+        blank=True,
+        default='profile_pics/default_avatar.png' # Make sure this file exists in media/profile_pics/
+    )
+    bio = models.TextField(blank=True, help_text="Tell us about yourself.")
+    skills = models.ManyToManyField(
+        Skill,
+        blank=True,
+        related_name='freelancers',
+        help_text="Skills relevant to your freelance work."
+    )
+    # For Freelancers
+    availability = models.CharField(
+        max_length=20,
+        choices=Availability.choices,
+        default=Availability.AVAILABLE,
+        blank=True,
+        null=True,
+        help_text="Your current availability status."
+    )
+    hourly_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Your hourly rate in USD (optional)."
+    )
+    # For Clients
+    company_name = models.CharField(max_length=255, blank=True)
+    company_website = models.URLField(max_length=200, blank=True)
+    # --- END UPDATED/ADDED PROFILE FIELDS ---
+
+    # Method to handle role changes
+    def save(self, *args, **kwargs):
+        if self.role == self.Role.CLIENT:
+            self.availability = None
+            self.hourly_rate = None
+            # If you want to clear skills when switched to Client:
+            # if self.pk: # Only clear if user already exists
+            #    self.skills.clear()
+        elif self.role == self.Role.FREELANCER:
+             self.company_name = ''
+             self.company_website = ''
+        super().save(*args, **kwargs)
 
 
-# Get the active user model dynamically
-# Put this AFTER the User model definition if User is your custom model
-ActiveUser = get_user_model() 
+# --- Project and Bid Models ---
+ActiveUser = get_user_model()
+class Project(models.Model):
+    class Status(models.TextChoices):
+        OPEN = "OPEN", "Open"
+        IN_PROGRESS = "IN_PROGRESS", "In Progress"
+        COMPLETED = "COMPLETED", "Completed"
+    CATEGORY_CHOICES = [
+        ('webdev', 'Web Development'), ('design', 'Graphic Design'),
+        ('writing', 'Writing/Translation'), ('marketing', 'Digital Marketing'),
+        ('other', 'Other'),
+    ]
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    budget = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='other', db_index=True)
+    skills_required = models.TextField(blank=True, help_text="Comma-separated list...")
+    client = models.ForeignKey(ActiveUser, on_delete=models.CASCADE, related_name="projects_as_client")
+    freelancer = models.ForeignKey(ActiveUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="projects_as_freelancer")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.title
 
 class Project(models.Model):
     class Status(models.TextChoices):
@@ -40,6 +123,7 @@ class Project(models.Model):
     description = models.TextField()
     budget = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    payment_intent_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Payment Intent ID")
     
     # --- NEW FIELDS ---
     category = models.CharField(
