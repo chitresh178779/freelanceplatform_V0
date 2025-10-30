@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.conf import settings
-from .models import User, Project, Bid, Skill, ChatRoom, Message
+from .models import User, Project, Bid, Skill, ChatRoom, Message, Follow
 from rest_framework.exceptions import AuthenticationFailed
 
 
@@ -95,6 +95,9 @@ class PublicUserProfileSerializer(serializers.ModelSerializer):
     projects_as_freelancer = SimpleProjectSerializer(many=True, read_only=True)
     profile_picture_url = serializers.SerializerMethodField()
     availability_display = serializers.CharField(source='get_availability_display', read_only=True)
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -103,7 +106,8 @@ class PublicUserProfileSerializer(serializers.ModelSerializer):
             'profile_picture_url', 'bio', 'skills',
             'availability', 'availability_display', 'hourly_rate', # Added
             'company_name', 'company_website', # Added
-            'projects_as_client', 'projects_as_freelancer'
+            'projects_as_client', 'projects_as_freelancer','followers_count', 
+            'following_count', 'is_following',
         ]
         read_only_fields = fields
 
@@ -118,6 +122,23 @@ class PublicUserProfileSerializer(serializers.ModelSerializer):
              try: return request.build_absolute_uri(default_path)
              except Exception: pass
         return None
+    
+    def get_followers_count(self, obj):
+        # obj is the User instance (the person being viewed)
+        return obj.followers.count() # followers is the related_name from Follow model
+
+    def get_following_count(self, obj):
+        # obj is the User instance (the person being viewed)
+        return obj.following.count() # following is the related_name from Follow model
+
+    def get_is_following(self, obj):
+        # Get the logged-in user from the request context
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        # Check if a Follow relationship exists
+        return Follow.objects.filter(follower=request.user, following=obj).exists()
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
