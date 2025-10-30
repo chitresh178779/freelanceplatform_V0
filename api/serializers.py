@@ -1,8 +1,68 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.conf import settings
-from .models import User, Project, Bid, Skill
+from .models import User, Project, Bid, Skill, ChatRoom, Message
 from rest_framework.exceptions import AuthenticationFailed
+
+
+# --- NEW: Chat Serializers ---
+
+class MessageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for individual chat messages.
+    """
+    # Use ReadOnlyField to show the username, not just the ID
+    sender_username = serializers.ReadOnlyField(source='sender.username')
+
+    class Meta:
+        model = Message
+        fields = [
+            'id', 
+            'room', 
+            'sender', 
+            'sender_username', 
+            'content', 
+            'timestamp', 
+            'is_read'
+        ]
+        read_only_fields = ['id', 'room', 'sender', 'sender_username', 'timestamp']
+
+class ChatRoomSerializer(serializers.ModelSerializer):
+    """
+    Serializer for chat rooms.
+    """
+    # Show participant usernames
+    participants = serializers.SlugRelatedField(
+        many=True,
+        slug_field='username',
+        queryset=get_user_model().objects.all()
+    )
+    # Optionally embed the last message for chat list previews
+    last_message = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ChatRoom
+        fields = [
+            'id', 
+            'participants', 
+            'project', 
+            'created_at', 
+            'updated_at', 
+            'last_message'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'last_message']
+
+    def get_last_message(self, obj):
+        """
+        Get the most recent message from the chat room.
+        """
+        last_msg = obj.messages.order_by('-timestamp').first()
+        if last_msg:
+            return MessageSerializer(last_msg).data
+        return None
+
+# --- END: Chat Serializers ---
 
 # --- NEW: Simplified Serializers for Embedding ---
 class SkillSerializer(serializers.ModelSerializer):

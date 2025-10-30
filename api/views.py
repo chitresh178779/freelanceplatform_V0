@@ -3,9 +3,9 @@ from stripe import StripeError
 from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User, Project, Bid, Skill
+from .models import User, Project, Bid, Skill, ChatRoom, Message, Follow
 from django.db.models import Q
-from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer
+from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -58,7 +58,6 @@ class UserSearchListView(generics.ListAPIView):
     
     # Fields for exact-match filtering (e.g., /api/profiles/?role=FREELANCER)
     filterset_fields = ['role']
-    
     
     # Fields for partial-match search (e.g., /api/profiles/?search=john)
     # We can search by username, name, and the 'name' field of related skills
@@ -583,3 +582,131 @@ class ProjectReleasePaymentView(APIView):
 
 # --- END Release Payment View ---
 
+# --- NEW: Chat API Views ---
+
+class ChatRoomListView(generics.ListCreateAPIView):
+    """
+    API view to list chat rooms for the logged-in user or create a new one.
+    GET: Returns a list of chat rooms the user is a participant in.
+    POST: Creates a new chat room (e.g., to start a chat).
+    """
+    serializer_class = ChatRoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Return all chat rooms where the logged-in user is a participant
+        return self.request.user.chat_rooms.all().order_by('-updated_at')
+
+    def perform_create(self, serializer):
+        # When creating a room, automatically add the creator as a participant
+        participants = serializer.validated_data.get('participants', [])
+        if self.request.user not in participants:
+            participants.append(self.request.user)
+        # You might add logic here to prevent duplicate rooms between the same users
+        serializer.save(participants=participants)
+
+class MessageListView(generics.ListAPIView):
+    """
+    API view to list all messages for a specific chat room.
+    Accessible via /api/chats/<room_id>/messages/
+    """
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None # Optional: Remove pagination for chat history
+
+    def get_queryset(self):
+        room_id = self.kwargs.get('room_id')
+        # Ensure the user is a participant in the room they are trying to access
+        if ChatRoom.objects.filter(id=room_id, participants=self.request.user).exists():
+            return Message.objects.filter(room_id=room_id).order_by('timestamp')
+        # If not a participant, return an empty list
+        return Message.objects.none()
+
+# --- END: Chat API Views ---
+
+# --- NEW: Follow/Unfollow Views ---
+
+class FollowToggleView(APIView):
+    """
+    API view to follow (POST) or unfollow (DELETE) a user.
+    Accessible via /api/profiles/<username>/follow/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        username_to_follow = self.kwargs.get('username')
+        try:
+            user_to_follow = User.objects.get(username=username_to_follow)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        follower = request.user
+
+        if follower == user_to_follow:
+            return Response({"error": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # get_or_create handles the unique_together constraint gracefully
+        follow, created = Follow.objects.get_or_create(
+            follower=follower,
+            following=user_to_follow
+        )
+
+        if not created:
+            return Response({"message": "You are already following this user."}, status=status.HTTP_200_OK)
+
+        return Response({"message": f"Successfully followed {username_to_follow}."}, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        username_to_unfollow = self.kwargs.get('username')
+        try:
+            user_to_unfollow = User.objects.get(username=username_to_unfollow)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        follower = request.user
+
+        # Find the follow relationship
+        follow_instance = Follow.objects.filter(
+            follower=follower,
+            following=user_to_unfollow
+        )
+
+        if not follow_instance.exists():
+            return Response({"error": "You are not following this user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        follow_instance.delete()
+        return Response({"message": f"Successfully unfollowed {username_to_unfollow}."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class FollowerListView(generics.ListAPIView):
+    """
+    API view to list the followers of a specific user.
+    Accessible via /api/profiles/<username>/followers/
+    """
+    serializer_class = PublicUserProfileSerializer
+    permission_classes = [permissions.AllowAny] # Anyone can see followers
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(User, username=username)
+        # Find all Users who are listed as 'follower' in a Follow
+        # object where the 'following' field is our target user.
+        return User.objects.filter(following__following=user)
+
+
+class FollowingListView(generics.ListAPIView):
+    """
+    API view to list the users a specific user is following.
+    Accessible via /api/profiles/<username>/following/
+    """
+    serializer_class = PublicUserProfileSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(User, username=username)
+        # Find all Users who are listed as 'following' in a Follow
+        # object where the 'follower' field is our target user.
+        return User.objects.filter(followers__follower=user)
+
+# --- END: Follow/Unfollow Views ---

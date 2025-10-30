@@ -27,11 +27,11 @@ STRIPE_ENDPOINT_SECRET = os.getenv('STRIPE_ENDPOINT_SECRET')
 # --- END UPDATE ---
 
 # Add checks to ensure keys are loaded (optional but recommended)
-if STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
-    print(f"DEBUG: Stripe Key Loaded: {STRIPE_SECRET_KEY[:10]}...") # Print first 10 chars for confirmation
-else:
-    print("ERROR: STRIPE_SECRET_KEY not found in environment!")
+# if STRIPE_SECRET_KEY:
+#     stripe.api_key = STRIPE_SECRET_KEY
+#     print(f"DEBUG: Stripe Key Loaded: {STRIPE_SECRET_KEY[:10]}...") # Print first 10 chars for confirmation
+# else:
+#     print("ERROR: STRIPE_SECRET_KEY not found in environment!")
     # raise ImproperlyConfigured("STRIPE_SECRET_KEY not found...")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -49,6 +49,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     #apps installed seperately
+    'daphne',
     'channels',
     'rest_framework',
     'django_filters',
@@ -92,7 +93,13 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 
 # Database

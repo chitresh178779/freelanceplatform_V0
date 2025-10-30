@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 
+
 # --- NEW: Skill Model ---
 class Skill(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -197,3 +198,92 @@ class Bid(models.Model):
 
     def __str__(self):
         return f"Bid by {self.freelancer.username} on {self.project.title} for ${self.amount}"
+    
+
+
+class ChatRoom(models.Model):
+    """
+    A private chat room between two users.
+    """
+    # We use ManyToManyField to link two (or more) users to a room.
+    participants = models.ManyToManyField(
+        ActiveUser, 
+        related_name='chat_rooms',
+        verbose_name="Participants"
+    )
+    # Optional: Link chat to a specific project
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="project_chats"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        # Generate a name for the chat room, e.g., "User1 & User2"
+        usernames = " & ".join([user.username for user in self.participants.all()])
+        if self.project:
+            return f"Chat for '{self.project.title}' ({usernames})"
+        return f"Chat between: {usernames}"
+
+class Message(models.Model):
+    """
+    A single message within a ChatRoom.
+    """
+    room = models.ForeignKey(
+        ChatRoom, 
+        on_delete=models.CASCADE, 
+        related_name='messages'
+    )
+    sender = models.ForeignKey(
+        ActiveUser, 
+        on_delete=models.CASCADE, 
+        related_name='sent_messages'
+    )
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    # Optional: 'read' status
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp'] # Show oldest messages first
+
+    def __str__(self):
+        return f"Msg from {self.sender.username} in room {self.room.id} at {self.timestamp}"
+
+# --- END: Chat Models -
+
+# --- NEW: Follow Model ---
+class Follow(models.Model):
+    """
+    Model to store user follow relationships.
+    'follower' (the one doing the following)
+    'following' (the one being followed)
+    """
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='following' # user.following.all() will list Follow objects where this user is the follower
+    )
+    following = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='followers' # user.followers.all() will list Follow objects where this user is being followed
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        # A user can only follow another user once
+        unique_together = ('follower', 'following')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+# --- END: Follow Model ---
