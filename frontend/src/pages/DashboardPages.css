@@ -1,0 +1,41 @@
+/* In src/pages/DashboardPages.css */
+.dashboard-page-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.dashboard-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.dashboard-list {
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; Center items like ProjectCard */
+    gap: 20px;
+}
+
+/* Common message styles */
+.loading-message,
+.error-message,
+.empty-message {
+    text-align: center;
+    padding: 30px;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-top: 30px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+}
+.error-message {
+    color: #dc3545; /* Red */
+    font-weight: 600;
+}

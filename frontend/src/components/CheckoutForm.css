@@ -1,0 +1,77 @@
+/* src/components/CheckoutForm.css */
+.checkout-form {
+    padding: 25px;
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.2); /* Use theme vars */
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    margin-top: 20px; /* Space above form */
+}
+
+.checkout-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+}
+.checkout-amount {
+     text-align: center;
+     font-size: 1rem;
+     color: var(--text-secondary);
+     margin-bottom: 25px;
+}
+
+.card-element-container {
+    padding: 15px;
+    border-radius: 6px;
+    /* Use a light/dark bg based on theme, slightly different from main glass */
+    background-color: rgba(var(--translucent-bg-rgb), 0.1); 
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    margin-bottom: 20px;
+}
+body:not(.dark) .card-element-container {
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border-color: rgba(var(--translucent-border-rgb), 0.3);
+}
+
+.card-element-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.payment-error {
+    color: #e53e3e; /* Red */
+    background-color: rgba(229, 62, 62, 0.1);
+    border: 1px solid rgba(229, 62, 62, 0.3);
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.pay-button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--text-accent);
+    color: var(--text-on-cta);
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.pay-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pay-button:hover:not(:disabled) {
+    opacity: 0.85;
+}

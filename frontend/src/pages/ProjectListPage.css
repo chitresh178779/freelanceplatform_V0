@@ -1,0 +1,135 @@
+/* In src/pages/ProjectListPage.css */
+.project-list-page-container {
+    width: 100%;
+    max-width: 900px; /* This is the main content column width */
+    margin: 40px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.list-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 30px; 
+}
+
+/* Styles for Filter Controls */
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.2);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: 100%; /* Ensure it spans the container */
+    box-sizing: border-box; /* Include padding in width */
+}
+
+.search-input,
+.category-select {
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    background-color: rgba(var(--translucent-bg-rgb), 0.15);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease; 
+}
+
+body.dark .category-select {
+    background-color: rgba(var(--translucent-bg-rgb), 0.15); 
+    color: var(--text-primary); 
+    border-color: rgba(var(--translucent-border-rgb), 0.3);
+}
+body.dark .category-select option {
+     background-color: #2c3e50; 
+     color: var(--text-primary); 
+}
+
+.search-input {
+    flex-grow: 1; 
+}
+.category-select {
+    min-width: 180px;
+     -webkit-appearance: none;
+     -moz-appearance: none;
+     appearance: none;
+}
+
+.search-input:focus,
+.category-select:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(var(--text-accent-rgb, 0, 123, 255), 0.2);
+}
+
+/* Project Count and Messages */
+.project-count,
+.loading-message,
+.no-projects-message {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+/* Project List Area */
+.projects-list {
+    display: flex;
+    flex-direction: column;
+    /* REMOVED: align-items: center; */
+    width: 100%; /* Ensure it spans the container */
+}
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+}
+
+.pagination-controls button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--text-accent);
+    background-color: transparent;
+    color: var(--text-accent);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background-color: var(--text-accent);
+    color: var(--text-on-cta);
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .filter-controls {
+        flex-direction: column; 
+    }
+    .category-select {
+        min-width: 100%; 
+    }
+    .list-title {
+        font-size: 2rem;
+    }
+}

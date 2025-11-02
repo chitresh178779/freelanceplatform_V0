@@ -1,0 +1,97 @@
+/* In src/components/UserSearchCard.css */
+.user-search-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 25px;
+    border-radius: 10px;
+    background-color: rgba(var(--translucent-bg-rgb), var(--translucent-opacity));
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.user-search-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-color: var(--text-accent);
+}
+
+.user-card-picture {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(var(--translucent-border-rgb), 0.3);
+    margin-bottom: 15px;
+}
+
+.user-card-info {
+    flex-grow: 1; /* Pushes skills/button down */
+}
+
+.user-card-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.user-card-username {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 4px 0 10px 0;
+}
+
+.user-card-role {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+/* Role colors (reused from UserProfilePage.css) */
+.role-client { background-color: rgba(0, 123, 255, 0.1); color: #007bff; }
+body.dark .role-client { background-color: rgba(0, 170, 255, 0.15); color: #00aaff; }
+.role-freelancer { background-color: rgba(40, 167, 69, 0.1); color: #28a745; }
+body.dark .role-freelancer { background-color: rgba(40, 167, 69, 0.15); color: #34c759; }
+
+.user-card-skills {
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.user-card-skill-tag {
+    background-color: rgba(var(--text-accent-rgb, 0, 123, 255), 0.1);
+    color: var(--text-accent);
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.user-card-button {
+    background-color: transparent;
+    color: var(--text-accent); 
+    border: 1px solid var(--text-accent);
+    border-radius: 5px;
+    padding: 8px 16px; 
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    text-decoration: none;
+    text-align: center;
+    margin-top: 10px; /* Space from skills */
+}
+
+.user-card-button:hover {
+    background-color: var(--text-accent); 
+    color: var(--text-on-cta); 
+}

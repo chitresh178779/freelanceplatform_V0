@@ -1,0 +1,248 @@
+/* In src/pages/AuthPage.css */
+
+@keyframes subtle-float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 70px); /* Full height minus navbar */
+}
+
+.auth-card {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 550px;
+
+    /* "Clear Glass" effect */
+    background-color: rgba(var(--translucent-bg-rgb), var(--translucent-opacity));
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease;
+    
+    /* Animation */
+    animation: subtle-float 6s ease-in-out infinite;
+}
+
+.auth-branding {
+    flex: 1;
+    /* Gradient based on "Steel & Sky" theme */
+    background: linear-gradient(135deg, #7F7FD5, #86A8E7);
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* Center text */
+    text-align: center; /* Center text */
+}
+/* Use a different gradient in dark mode */
+body.dark .auth-branding {
+    background: linear-gradient(135deg, #0f2027, #203a43);
+}
+
+
+.auth-branding h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.auth-branding p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 300px; /* Constrain width */
+}
+
+.auth-form-container {
+    flex: 1;
+    padding: 40px 50px; /* More horizontal padding */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 380px; /* Slightly wider form */
+}
+
+.auth-form h3 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    position: relative; /* For icons */
+}
+
+.input-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.label-icon {
+    margin-right: 8px;
+    stroke-width: 2;
+    color: var(--text-secondary);
+}
+
+/* Updated input styling (like EditProfile page) */
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background-color: rgba(var(--translucent-bg-rgb), 0.15);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+.input-group input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(var(--text-accent-rgb, 0, 123, 255), 0.2);
+    background-color: rgba(var(--translucent-bg-rgb), 0.25);
+}
+
+.auth-button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--text-accent);
+    color: var(--text-on-cta);
+    border: none;
+    border-radius: 8px; /* Match inputs */
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.auth-button:hover {
+    opacity: 0.85;
+    box-shadow: 0 4px 15px rgba(var(--text-accent-rgb), 0.3);
+    transform: translateY(-2px);
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+}
+
+.auth-switch a {
+    color: var(--text-accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* --- Styles for Role Selection --- */
+.role-selection-group label {
+    margin-bottom: 12px;
+}
+
+.role-options {
+    display: flex;
+    gap: 15px;
+}
+
+.role-option {
+    flex: 1;
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid rgba(var(--translucent-border-rgb), 0.4);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+}
+
+.role-option:hover {
+    border-color: var(--text-accent);
+    background-color: rgba(var(--translucent-bg-rgb), 0.2);
+}
+
+.role-option.active {
+    border-color: var(--text-accent);
+    background-color: rgba(var(--text-accent-rgb, 0, 123, 255), 0.1);
+    box-shadow: 0 0 0 2px var(--text-accent);
+}
+.role-option.active .role-title{
+    color: var(--text-accent);
+}
+
+.role-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.role-subtitle {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+/* --- END Role Selection Styles --- */
+
+.auth-error-message {
+    color: #e53e3e;
+    background-color: rgba(229, 62, 62, 0.1);
+    border: 1px solid rgba(229, 62, 62, 0.3);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .auth-card {
+        flex-direction: column;
+        animation: none; /* Disable float animation on mobile */
+    }
+    .auth-branding {
+        display: none; /* Hide branding on mobile */
+    }
+    .auth-form-container {
+        padding: 30px 20px; /* Reduce padding */
+    }
+}

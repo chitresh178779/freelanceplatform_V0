@@ -1,0 +1,78 @@
+/* In frontend/src/index.css */
+
+/* 1. Define the animation (Horizontal shift) */
+@keyframes animatedGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 2. Define Light/Dark Mode variables */
+:root {
+    --text-primary: #2c3e50; /* Dark Slate Gray */
+    --text-secondary: #555; /* Medium Gray */
+    --text-accent: #0056b3; /* Stronger Blue */
+    --text-on-cta: #ffffff;
+    --text-on-hero: #2c3e50;
+    --text-accent-rgb: 0, 86, 179;
+
+    --translucent-bg-rgb: 255, 255, 255; /* White */
+    --translucent-border-rgb: 0, 0, 0;
+    --translucent-opacity: 0.3;
+
+    --navbar-glass-bg-rgb: 10, 10, 15;
+    --navbar-glass-opacity: 0.6;
+    --navbar-glass-border-rgb: 255, 255, 255;
+}
+
+body.dark {
+    --text-primary: #ffffff; /* Pure White */
+    --text-secondary: #adb5bd; /* Medium Light Gray */
+    --text-accent: #17a2b8; /* Cyan / Teal */
+    --text-on-cta: #ffffff;
+    --text-on-hero: #ffffff; /* Pure White */
+    --text-accent-rgb: 23, 162, 184;
+
+    --translucent-bg-rgb: 30, 30, 30; /* Dark grey */
+    --translucent-border-rgb: 255, 255, 255;
+    --translucent-opacity: 0.3;
+
+    --navbar-glass-bg-rgb: 10, 10, 15;
+    --navbar-glass-opacity: 0.6;
+    --navbar-glass-border-rgb: 255, 255, 255;
+}
+
+/* 3. Apply the animated background to the body */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-secondary);
+    
+    /* --- "STEEL & SKY" LIGHT MODE BACKGROUND --- */
+    background: linear-gradient(135deg, #7F7FD5, #86A8E7, #91EAE4, #86A8E7, #7F7FD5);
+    background-size: 300% 300%; 
+    animation: animatedGradient 15s ease infinite;
+
+    transition: color 0.3s ease;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+body.dark {
+    /* --- "MIDNIGHT TECH" DARK MODE BACKGROUND --- */
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364, #203a43, #0f2027);
+    background-size: 300% 300%;
+    animation: animatedGradient 15s ease infinite;
+}
+
+/* Helper class for accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

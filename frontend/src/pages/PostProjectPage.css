@@ -1,0 +1,148 @@
+/* In frontend/src/pages/PostProjectPage.css */
+
+/* Container for the whole page content */
+.post-project-page-container {
+    width: 100%;
+    max-width: 800px; /* Wider form */
+    margin: 40px auto; /* Add margin top/bottom */
+    padding: 0 20px; /* Padding left/right */
+    box-sizing: border-box;
+}
+
+/* The card container for the form */
+.post-project-form-container {
+    padding: 30px 40px; /* Adjusted padding */
+    border-radius: 12px; /* Slightly larger radius */
+
+    /* Clear Glass effect */
+    background-color: rgba(var(--translucent-bg-rgb), var(--translucent-opacity));
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    
+    transition: background-color 0.3s ease;
+}
+
+.form-title {
+    font-size: 2.2rem; /* Larger title */
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.form-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 35px; /* More space below subtitle */
+}
+
+.form-group {
+    margin-bottom: 25px; /* Consistent spacing */
+    position: relative; /* Needed for potential floating labels */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px; /* More space below label */
+    font-weight: 600;
+    font-size: 0.95rem; /* Slightly smaller label */
+    color: var(--text-secondary);
+}
+
+/* Modernized Input Styling */
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px; /* More padding */
+    border-radius: 8px; /* Softer corners */
+    box-sizing: border-box; /* IMPORTANT */
+    font-size: 1rem;
+    font-family: inherit;
+    
+    background-color: rgba(var(--translucent-bg-rgb), 0.15); /* Even clearer input background */
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.2s ease;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Subtle inner shadow */
+    
+    /* Basic appearance reset for select */
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Add custom arrow or leave browser default */
+}
+
+
+/* Focus State */
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(var(--text-accent-rgb, 0, 123, 255), 0.2); /* Use accent color RGB */
+    background-color: rgba(var(--translucent-bg-rgb), 0.25); /* Slightly darker on focus */
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Row for side-by-side elements */
+.form-row {
+    display: flex;
+    gap: 20px; /* Space between items in the row */
+    margin-bottom: 25px;
+}
+
+.form-group.half-width {
+    flex: 1; /* Each takes up half the space */
+    margin-bottom: 0; /* Remove bottom margin as row handles it */
+}
+
+/* Modernized Submit Button */
+.submit-button {
+    width: 100%;
+    padding: 15px; /* Larger padding */
+    background-color: var(--text-accent); /* Use Accent color */
+    color: var(--text-on-cta);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 10px; /* Add some space above */
+    box-sizing: border-box; /* Ensure padding doesn't break layout */
+}
+
+.submit-button:hover {
+    opacity: 0.85; /* Slightly fade on hover */
+}
+.submit-button:active {
+    transform: scale(0.98); /* Click effect */
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column; /* Stack fields vertically on small screens */
+        gap: 0; /* Remove gap when stacked */
+    }
+    .form-group.half-width {
+        margin-bottom: 25px; /* Add back margin when stacked */
+    }
+    .post-project-form-container {
+        padding: 20px; /* Reduce padding on small screens */
+    }
+}
+
+/* --- FIX for Dark Mode Dropdown Options --- */
+body.dark .form-group select option {
+     background-color: #2c3e50; /* Example dark background for options */
+     color: var(--text-primary); /* Light text */
+}
+/* --- END FIX --- */

@@ -1,0 +1,256 @@
+/* In src/components/Navbar.css */
+
+/* Container */
+.navbar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+/* Navbar Bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5%;
+    height: 70px;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 101; 
+
+    /* Dark Blurry Glass Effect */
+    background-color: rgba(var(--navbar-glass-bg-rgb), var(--navbar-glass-opacity));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(var(--navbar-glass-border-rgb), 0.15);
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Brand */
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f8f9fa; /* Always light */
+    text-decoration: none;
+}
+.navbar-brand-highlight {
+     color: var(--text-accent);
+}
+
+/* Desktop Links Container */
+.navbar-links {
+    display: flex;
+    align-items: center;
+}
+
+/* Individual Links */
+.navbar-link {
+    color: #f8f9fa; /* Always light */
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.navbar-link:hover {
+    color: var(--text-accent);
+}
+
+/* Login/Signup Buttons */
+.login-btn, .register-btn {
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-weight: 600;
+    border: 2px solid #f8f9fa; /* Always light border */
+    background-color: transparent;
+    transition: all 0.3s ease;
+    color: #f8f9fa; /* Always light text */
+    text-decoration: none;
+    margin-left: 20px;
+    cursor: pointer;
+}
+.login-btn:hover, .register-btn:hover {
+    background-color: var(--text-accent);
+    border-color: var(--text-accent);
+    color: var(--text-on-cta);
+}
+
+/* Greeting & User Menu Container */
+.navbar-greeting {
+    color: #f8f9fa;
+    font-weight: 500;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    cursor: pointer; 
+}
+.user-menu-container {
+    position: relative;
+    margin-left: 20px;
+}
+
+/* Logout Button (Directly in Navbar, e.g. mobile) */
+.logout-btn {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-weight: 600;
+    margin-left: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    white-space: nowrap;
+    font-family: inherit;
+    font-size: inherit;
+}
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+/* Theme Toggle Container */
+.navbar-links > .theme-switch-container,
+.navbar-links > .theme-toggle-button {
+    margin-left: 30px;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Hamburger Button Styles --- */
+.hamburger-button {
+    display: none; /* Hidden on desktop */
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 110;
+}
+.hamburger-button span {
+    width: 100%;
+    height: 3px;
+    background-color: #f8f9fa; /* Always light */
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+    position: relative;
+}
+.hamburger-button.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+.hamburger-button.active span:nth-child(2) { opacity: 0; }
+.hamburger-button.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
+
+/* --- Mobile Menu Styles --- */
+.mobile-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 0 30px 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+    z-index: 99;
+
+    background-color: rgba(var(--navbar-glass-bg-rgb), 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    opacity: 0;
+    transform: translateY(-100%);
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.mobile-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.mobile-menu .navbar-link { margin: 15px 0; font-size: 1.3rem; color: #f8f9fa; width: 80%; text-align: center; padding: 10px 0; border-radius: 6px; }
+.mobile-menu .navbar-link:hover { background-color: rgba(var(--text-accent-rgb, 0, 123, 255), 0.15); color: var(--text-accent); }
+.mobile-menu .login-btn, .mobile-menu .register-btn, .mobile-menu .logout-btn { width: 80%; text-align: center; padding: 12px 0; margin: 10px 0; font-size: 1.2rem; }
+.mobile-menu .login-btn, .mobile-menu .register-btn { border-color: #f8f9fa; color: #f8f9fa; }
+.mobile-menu .login-btn:hover, .mobile-menu .register-btn:hover { background-color: var(--text-accent); border-color: var(--text-accent); color: var(--text-on-cta); }
+.mobile-theme-toggle { margin-top: 30px; }
+
+
+/* --- Desktop User Dropdown Styles --- */
+.dropdown-arrow {
+    font-size: 0.7em;
+    margin-left: 6px;
+    transition: transform 0.2s ease-in-out;
+}
+.user-menu-container:hover .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 180px;
+    padding: 10px 0;
+    border-radius: 8px;
+    margin-top: 5px;
+    z-index: 110;
+
+    /* Use theme-aware clear glass effect */
+    background-color: rgba(var(--translucent-bg-rgb), 0.8);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-link {
+    padding: 10px 20px;
+    color: var(--text-primary); /* Use theme primary text */
+    text-decoration: none;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dropdown-link:hover {
+    background-color: rgba(var(--text-accent-rgb, 0, 123, 255), 0.15);
+    color: var(--text-accent);
+}
+
+.logout-dropdown-btn {
+    color: #dc3545; /* Red for logout */
+    border-top: 1px solid rgba(var(--translucent-border-rgb), 0.15);
+    margin-top: 5px;
+    padding-top: 10px;
+}
+.logout-dropdown-btn:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #c82333;
+}
+/* --- End Dropdown Styles --- */
+
+
+/* --- Media Query --- */
+@media (max-width: 992px) { /* Breakpoint */
+    .desktop-links {
+        display: none; /* Hide desktop links container */
+    }
+    .hamburger-button {
+        display: flex; /* Show hamburger button */
+    }
+}

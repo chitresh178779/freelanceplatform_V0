@@ -1,0 +1,73 @@
+/* In frontend/src/components/HowItWorks.css */
+.how-it-works-section {
+    padding: 60px 20px;
+    width: 100%;
+    box-sizing: border-box;
+
+    /* REMOVED ALL BACKGROUND, BORDER, AND SHADOW PROPERTIES */
+    
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 50px;
+}
+
+.steps-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.step-card {
+    flex-basis: 250px;
+    flex-grow: 1;
+    text-align: center;
+    padding: 30px;
+    border-radius: 8px;
+
+    /* This is the translucent "frosted glass" card */
+    background-color: rgba(var(--translucent-bg-rgb), 0.3); /* Using 0.3 from index.css */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s, backdrop-filter 0.3s;
+}
+
+.step-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.step-icon {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    border-radius: 50%;
+    background-color: var(--text-accent);
+    color: var(--text-on-cta);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 auto 20px auto;
+}
+
+.step-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.step-card p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}

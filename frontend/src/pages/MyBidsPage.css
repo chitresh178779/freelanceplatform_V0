@@ -1,0 +1,76 @@
+/* In src/pages/MyBidsPage.css */
+
+.bid-list {
+    align-items: stretch; /* Make cards full width */
+}
+
+.bid-card {
+    width: 100%; 
+    padding: 20px 25px;
+    margin-bottom: 15px; 
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.15);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+.bid-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--translucent-border-rgb), 0.15);
+}
+
+.bid-project-title {
+    font-weight: 600;
+    color: var(--text-accent);
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+.bid-project-title:hover {
+    text-decoration: underline;
+}
+
+.bid-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #28a745; /* Green */
+}
+
+.bid-proposal {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+     display: -webkit-box;
+     -webkit-line-clamp: 3; /* Show max 3 lines */
+     -webkit-box-orient: vertical;
+     overflow: hidden;
+     text-overflow: ellipsis;
+}
+
+.bid-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.bid-status {
+    font-weight: 600;
+    text-transform: capitalize;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+.status-pending { background-color: rgba(255, 193, 7, 0.15); color: #ffc107; } 
+body.dark .status-pending { background-color: rgba(255, 193, 7, 0.2); color: #ffd56a; }
+.status-accepted { background-color: rgba(40, 167, 69, 0.15); color: #28a745; } 
+body.dark .status-accepted { background-color: rgba(40, 167, 69, 0.2); color: #34c759; }
+.status-rejected { background-color: rgba(220, 53, 69, 0.15); color: #dc3545; } 
+body.dark .status-rejected { background-color: rgba(220, 53, 69, 0.2); color: #ff6b81; }

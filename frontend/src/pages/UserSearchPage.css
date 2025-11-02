@@ -1,0 +1,105 @@
+/* In src/pages/UserSearchPage.css */
+.user-search-page-container {
+    width: 100%;
+    max-width: 1200px; /* Wider container */
+    margin: 40px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.page-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+/* Search Bar Styles (similar to ProjectListPage) */
+.user-filter-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 40px; /* More space */
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.2);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.user-search-input,
+.user-role-select {
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    background-color: rgba(var(--translucent-bg-rgb), 0.15);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease; 
+}
+body.dark .user-role-select option {
+     background-color: #2c3e50; 
+     color: var(--text-primary); 
+}
+
+.user-search-input {
+    flex-grow: 1; 
+}
+.user-role-select {
+    min-width: 180px; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+     appearance: none;
+}
+.user-search-input:focus,
+.user-role-select:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 3px rgba(var(--text-accent-rgb, 0, 123, 255), 0.2);
+}
+.user-search-button {
+    padding: 12px 25px;
+    background-color: var(--text-accent);
+    color: var(--text-on-cta);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+.user-search-button:hover {
+    opacity: 0.85;
+}
+
+
+/* Results Grid */
+.user-results-grid {
+    display: grid;
+    /* Create responsive columns: 3 on large, 2 on medium, 1 on small */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+/* Shared message styles */
+.loading-message,
+.error-message,
+.empty-message {
+    text-align: center;
+    padding: 30px;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-top: 30px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    grid-column: 1 / -1; /* Make message span full grid width */
+}
+.error-message {
+    color: #dc3545;
+    font-weight: 600;
+}

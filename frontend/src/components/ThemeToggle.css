@@ -1,0 +1,39 @@
+/* In frontend/src/components/ThemeToggle.css */
+.theme-toggle-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    /* Base color from theme */
+    color: var(--text-primary); 
+    transition: color 0.3s ease;
+    height: 28px; 
+    width: 28px;
+}
+
+.theme-toggle-button:hover {
+    color: var(--text-accent); 
+}
+
+.theme-toggle-button svg {
+    width: 20px; 
+    height: 20px;
+    stroke: currentColor; /* Use button's color */
+}
+
+/* --- FIX: Specific color for Sun icon in Light mode --- */
+body:not(.dark) .theme-toggle-button .feather-sun {
+    /* Use a darker grey or the accent color for better visibility */
+    color: white; /* Dark grey */
+    /* Or use the accent color: color: var(--text-accent); */
+}
+/* --- End Fix --- */
+
+
+/* Fill moon icon in dark mode */
+body.dark .theme-toggle-button .feather-moon {
+    fill: currentColor; 
+}
