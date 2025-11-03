@@ -1,44 +1,33 @@
 // In src/pages/UserProfilePage.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios'; // Using basic axios
-import { useAuth } from '../context/AuthContext'; // Import useAuth
-// Import icons
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import { Briefcase, Link as LinkIcon, Clock, DollarSign, MessageCircle } from 'react-feather';
-import './UserProfilePage.css'; // We'll create this CSS next
+import './UserProfilePage.css';
 
 function UserProfilePage() {
-    const { username } = useParams(); // Get username from URL
-    const { user, authTokens, logoutUser } = useAuth(); // Get logged-in user
+    const { username } = useParams();
+    const { user, authTokens, logoutUser } = useAuth();
+    const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
-    // --- State for Follow logic ---
     const [isFollowing, setIsFollowing] = useState(false);
     const [followersCount, setFollowersCount] = useState(0);
-    const [isProcessingFollow, setIsProcessingFollow] = useState(false); // Prevent double clicks
-    // --- End Follow State ---
+    const [isProcessingFollow, setIsProcessingFollow] = useState(false);
 
-    // Fetch profile data (wrapped in useCallback)
+    // Fetch profile data
     const fetchProfile = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            // Must send auth token for the API to know "who is asking"
-            // This allows 'is_following' to be calculated
-            const headers = authTokens 
-                ? { 'Authorization': `Bearer ${authTokens.access}` } 
-                : {};
-                
+            const headers = authTokens ? { 'Authorization': `Bearer ${authTokens.access}` } : {};
             const response = await axios.get(`http://127.0.0.1:8000/api/profiles/${username}/`, { headers });
             setProfile(response.data);
-            
-            // --- Set initial follow state from API response ---
             setIsFollowing(response.data.is_following);
             setFollowersCount(response.data.followers_count);
-            // --- End ---
-            
         } catch (err) {
             console.error("Error fetching profile:", err);
             if (err.response && err.response.status === 404) {
@@ -49,63 +38,68 @@ function UserProfilePage() {
         } finally {
             setLoading(false);
         }
-    }, [username, authTokens]); // Depend on username and authTokens
+    }, [username, authTokens]);
 
-    // Initial fetch on component mount or when username changes
     useEffect(() => {
         fetchProfile();
     }, [fetchProfile]);
 
-    // --- Follow/Unfollow Handlers ---
+    // Handle Follow/Unfollow
     const handleFollowToggle = async () => {
-        if (!user) {
-            alert("Please log in to follow users.");
-            return;
-        }
-        if (isProcessingFollow) return; // Prevent multiple clicks
-
+        if (!user) { alert("Please log in to follow users."); return; }
+        if (isProcessingFollow) return;
         setIsProcessingFollow(true);
         const headers = { 'Authorization': `Bearer ${authTokens.access}` };
         const url = `http://127.0.0.1:8000/api/profiles/${username}/follow/`;
-
         try {
             if (isFollowing) {
-                // --- UNFOLLOW (DELETE) ---
                 await axios.delete(url, { headers });
-                setIsFollowing(false); // Update UI instantly
-                setFollowersCount(prev => prev - 1); // Update UI instantly
+                setIsFollowing(false); setFollowersCount(prev => prev - 1);
             } else {
-                // --- FOLLOW (POST) ---
-                await axios.post(url, {}, { headers }); // Empty object as data
-                setIsFollowing(true); // Update UI instantly
-                setFollowersCount(prev => prev + 1); // Update UI instantly
+                await axios.post(url, {}, { headers });
+                setIsFollowing(true); setFollowersCount(prev => prev + 1);
             }
         } catch (err) {
             console.error("Follow/Unfollow error:", err.response?.data || err.message);
             alert("An error occurred. Please try again.");
-            // Handle auth error
              if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                  logoutUser();
              }
         } finally {
-            setIsProcessingFollow(false); // Re-enable button
+            setIsProcessingFollow(false);
         }
     };
-    // --- End Handlers ---
 
+    // Handle Start Chat
+    const handleStartChat = async () => {
+        if (!user || !profile) {
+            alert("Please log in to start a chat.");
+            return;
+        }
+        try {
+            const response = await axios.post(
+                `http://127.0.0.1:8000/api/chats/start/`,
+                { username: profile.username }, // Send the username of the profile owner
+                { headers: { 'Authorization': `Bearer ${authTokens.access}` } }
+            );
+            const room = response.data;
+            navigate(`/chat/${room.id}`); // Redirect to the chat room
+        } catch (err) {
+            console.error("Error starting chat:", err.response?.data || err.message);
+            alert("Could not start chat. Please try again later.");
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                 logoutUser();
+            }
+        }
+    };
 
-    // --- Render states ---
     if (loading) return <div className="loading-message">Loading profile...</div>;
     if (error) return <div className="error-message">{error}</div>;
     if (!profile) return <div className="no-projects-message">Profile data unavailable.</div>;
 
-    // Determine project list based on role
     const projects = profile.role === 'CLIENT' ? profile.projects_as_client : profile.projects_as_freelancer;
     const projectListTitle = profile.role === 'CLIENT' ? "Active Projects" : "Work History";
-
-    const profilePicture = profile.profile_picture_url || '/default_avatar.png'; 
-    
-    // Check if the viewed profile is the logged-in user's own profile
+    const profilePicture = profile.profile_picture_url || '/default_avatar.png';
     const isOwnProfile = user && user.username === profile.username;
 
     return (
@@ -114,37 +108,36 @@ function UserProfilePage() {
                 {/* --- Left Column: Main Info --- */}
                 <div className="profile-main">
                     <div className="profile-card profile-summary-card">
-                        {/* Profile Header */}
                         <div className="profile-header">
-                            <img
-                                src={profilePicture}
-                                alt={`${profile.username}'s profile`}
-                                className="profile-picture"
-                                onError={(e) => { e.target.onerror = null; e.target.src="/default_avatar.png"}}
-                            />
+                            <img src={profilePicture} alt={`${profile.username}'s profile`} className="profile-picture" onError={(e)=>{ e.target.onerror = null; e.target.src="/default_avatar.png"}}/>
                             <div className="profile-info">
                                 <h1>{profile.name}</h1>
                                 <p className="profile-username">@{profile.username}</p>
-                                <span className={`profile-role role-${profile.role?.toLowerCase()}`}>
-                                    {profile.role}
-                                </span>
+                                <span className={`profile-role role-${profile.role?.toLowerCase()}`}>{profile.role}</span>
                                 <p className="profile-joined">Joined: {new Date(profile.date_joined).toLocaleDateString()}</p>
                                 
-                                {/* --- Follow/Edit Button --- */}
-                                <div className="profile-action-button">
+                                {/* --- UPDATED Action Buttons --- */}
+                                <div className="profile-action-buttons">
                                     {isOwnProfile ? (
-                                        <Link to="/profile/edit" className="edit-profile-btn">Edit Profile</Link>
+                                        // If it's YOUR profile, show "Edit Profile"
+                                        <Link to="/profile/edit" className="profile-btn edit-profile-btn">Edit Profile</Link>
                                     ) : (
-                                        <button 
-                                            onClick={handleFollowToggle} 
-                                            className={`follow-btn ${isFollowing ? 'following' : 'not-following'}`}
-                                            disabled={isProcessingFollow} // Disable button while processing
-                                        >
-                                            {isFollowing ? 'Following' : 'Follow'}
-                                        </button>
+                                        // If it's SOMEONE ELSE'S profile, show "Follow" and "Message"
+                                        <>
+                                            <button 
+                                                onClick={handleFollowToggle} 
+                                                className={`profile-btn follow-btn ${isFollowing ? 'following' : 'not-following'}`}
+                                                disabled={isProcessingFollow}
+                                            >
+                                                {isFollowing ? 'Following' : 'Follow'}
+                                            </button>
+                                            <button onClick={handleStartChat} className="profile-btn message-btn">
+                                                <MessageCircle size={16} /> Message
+                                            </button>
+                                        </>
                                     )}
                                 </div>
-                                {/* --- End Button --- */}
+                                {/* --- END Buttons --- */}
                             </div>
                         </div>
 
@@ -155,8 +148,7 @@ function UserProfilePage() {
                                 <span>Followers</span>
                             </div>
                             <div className="stat-item">
-                                {/* Use the count from the profile data */}
-                                <strong>{profile.following_count}</strong> 
+                                <strong>{profile.following_count}</strong>
                                 <span>Following</span>
                             </div>
                         </div>

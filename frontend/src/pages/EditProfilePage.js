@@ -3,10 +3,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, FileText, Image, CheckSquare, Briefcase, Link as LinkIcon, Clock, DollarSign } from 'react-feather';
+import { User, FileText, Image, CheckSquare, Briefcase, Link as LinkIcon, Clock, DollarSign, CreditCard } from 'react-feather';
 import './EditProfilePage.css';
 
-// Define Availability Choices (Match Backend)
 const availabilityChoices = [
     { value: 'available', label: 'Available for Hire' },
     { value: 'busy', label: 'Currently Busy' },
@@ -20,7 +19,7 @@ function EditProfilePage() {
     const [profileData, setProfileData] = useState({
         name: '',
         bio: '',
-        skills: [], // Store selected skill IDs
+        skills: [],
         profile_picture: null,
         availability: 'available',
         hourly_rate: '',
@@ -32,6 +31,10 @@ function EditProfilePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // --- THIS WAS THE MISSING LINE ---
+    const [isCreatingLink, setIsCreatingLink] = useState(false);
+    // --- END ---
 
     // Fetch available skills
     useEffect(() => {
@@ -68,7 +71,7 @@ function EditProfilePage() {
                     company_website: response.data.company_website || '',
                  });
                  setCurrentPictureUrl(response.data.profile_picture_url || '/default_avatar.png');
-             } catch (err) {
+             } catch (err) { 
                  console.error("Error fetching profile:", err);
                  if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                      logoutUser();
@@ -95,7 +98,6 @@ function EditProfilePage() {
         }
     };
 
-    // Handler for skill checkbox changes
     const handleSkillChange = (e) => {
         const skillId = parseInt(e.target.value);
         const isChecked = e.target.checked;
@@ -112,22 +114,19 @@ function EditProfilePage() {
         });
     };
 
-    // Handler for form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!authTokens) return;
-        setIsSubmitting(true);
-        setError('');
+        setIsSubmitting(true); setError('');
         const formDataToSend = new FormData();
+
         formDataToSend.append('name', profileData.name);
         formDataToSend.append('bio', profileData.bio);
-        (profileData.skills || []).forEach(skillId => {
-            formDataToSend.append('skills', skillId);
-        });
-        if (profileData.profile_picture instanceof File) {
-            formDataToSend.append('profile_picture', profileData.profile_picture);
-        }
+
         if (user?.role === 'FREELANCER') {
+            (profileData.skills || []).forEach(skillId => {
+                formDataToSend.append('skills', skillId);
+            });
             formDataToSend.append('availability', profileData.availability);
              if (profileData.hourly_rate !== '' && !isNaN(parseFloat(profileData.hourly_rate))) {
                  formDataToSend.append('hourly_rate', parseFloat(profileData.hourly_rate).toFixed(2));
@@ -138,9 +137,16 @@ function EditProfilePage() {
             formDataToSend.append('company_name', profileData.company_name);
             formDataToSend.append('company_website', profileData.company_website);
         }
+
+        if (profileData.profile_picture instanceof File) {
+            formDataToSend.append('profile_picture', profileData.profile_picture);
+        }
+
         try {
             const response = await axios.patch('http://127.0.0.1:8000/api/profile/', formDataToSend, {
-                 headers: { 'Authorization': `Bearer ${authTokens.access}` },
+                 headers: {
+                    'Authorization': `Bearer ${authTokens.access}`,
+                },
              });
             alert('Profile updated successfully!');
              if (response.data.profile_picture_url) {
@@ -165,6 +171,34 @@ function EditProfilePage() {
         finally { setIsSubmitting(false); }
     };
 
+    // --- Stripe Onboarding Handler ---
+    const handleStripeOnboard = async () => {
+        setIsCreatingLink(true);
+        setError('');
+        try {
+            const response = await axios.post(
+                'http://127.0.0.1:8000/api/stripe/onboard/',
+                {}, // Empty body
+                { headers: { 'Authorization': `Bearer ${authTokens.access}` } }
+            );
+            
+            if (response.data.onboarding_url) {
+                window.location.href = response.data.onboarding_url;
+            } else {
+                setError('Could not get onboarding link. Please try again.');
+            }
+        } catch (err) {
+            console.error("Error creating Stripe link:", err.response?.data || err.message);
+            setError('Failed to connect to Stripe. Please try again later.');
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                 logoutUser(); navigate('/login');
+            }
+        } finally {
+            setIsCreatingLink(false);
+        }
+    };
+    // --- END NEW Handler ---
+
     if (loading) return <div className="loading-message">Loading profile editor...</div>;
 
     return (
@@ -179,30 +213,52 @@ function EditProfilePage() {
                              <Image size={18} className="label-icon" /> Profile Picture
                          </label>
                          <div className="profile-pic-input">
-                            <img
-                                src={currentPictureUrl}
-                                alt="Profile preview"
-                                className="profile-pic-preview"
-                                onError={(e) => { e.target.onerror = null; e.target.src="/default_avatar.png"}}
+                            <img src={currentPictureUrl} alt="Profile preview" className="profile-pic-preview" onError={(e) => {e.target.onerror = null; e.target.src="/default_avatar.png"}}/>
+                            <input
+                                id="profile_picture"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="file-input"
                             />
-                            <input id="profile_picture" type="file" accept="image/*" onChange={handleFileChange} className="file-input" />
                             <label htmlFor="profile_picture" className="file-input-label">Change Picture</label>
                          </div>
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="name">
                             <User size={18} className="label-icon" /> Full Name
                         </label>
                         <input id="name" type="text" name="name" value={profileData.name} onChange={handleChange} required />
                     </div>
+
                     <div className="form-group">
                         <label htmlFor="bio">
                             <FileText size={18} className="label-icon" /> Bio
                         </label>
                         <textarea id="bio" name="bio" value={profileData.bio} onChange={handleChange} rows="5" placeholder="Tell everyone a bit about yourself..." />
                     </div>
+
+                    {/* --- Role Specific Fields --- */}
                     {user?.role === 'FREELANCER' && (
                         <>
+                            <div className="form-group payout-setup-section">
+                                <label>
+                                    <CreditCard size={18} className="label-icon" /> Payouts
+                                </label>
+                                <p className="payout-info-text">
+                                    Connect with Stripe to receive payments securely.
+                                </p>
+                                <button 
+                                    type="button" 
+                                    className="stripe-connect-button" 
+                                    onClick={handleStripeOnboard}
+                                    disabled={isCreatingLink}
+                                >
+                                    {isCreatingLink ? 'Connecting...' : 'Setup Stripe Payouts'}
+                                </button>
+                            </div>
+
                             <div className="form-group">
                                 <label htmlFor="availability">
                                     <Clock size={18} className="label-icon" /> Availability
@@ -215,12 +271,14 @@ function EditProfilePage() {
                                     ))}
                                 </select>
                             </div>
+
                             <div className="form-group">
                                 <label htmlFor="hourly_rate">
                                     <DollarSign size={18} className="label-icon" /> Hourly Rate ($) (Optional)
                                 </label>
                                 <input id="hourly_rate" type="number" name="hourly_rate" value={profileData.hourly_rate} onChange={handleChange} min="0" step="0.01" placeholder="e.g., 50.00" />
                             </div>
+
                             <div className="form-group">
                                 <label>
                                     <CheckSquare size={18} className="label-icon" /> Skills
@@ -240,6 +298,7 @@ function EditProfilePage() {
                             </div>
                         </>
                     )}
+
                     {user?.role === 'CLIENT' && (
                         <>
                             <div className="form-group">
@@ -248,6 +307,7 @@ function EditProfilePage() {
                                 </label>
                                 <input id="company_name" type="text" name="company_name" value={profileData.company_name} onChange={handleChange} placeholder="Your Company Inc." />
                             </div>
+
                             <div className="form-group">
                                 <label htmlFor="company_website">
                                     <LinkIcon size={18} className="label-icon" /> Company Website (Optional)
@@ -256,7 +316,9 @@ function EditProfilePage() {
                             </div>
                         </>
                     )}
-                    <button type="submit" className="submit-button" disabled={isSubmitting}>
+                    {/* --- End Role Specific Fields --- */}
+
+                    <button typeS="submit" className="submit-button" disabled={isSubmitting}>
                         {isSubmitting ? 'Saving...' : 'Save Changes'}
                     </button>
                 </form>

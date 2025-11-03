@@ -234,6 +234,14 @@ body.dark .auth-branding {
     text-align: center;
 }
 
+.form-error-text {
+    color: #e53e3e; /* Red error color */
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 5px; /* Space below the input */
+    margin-bottom: 0;
+}
+
 @media (max-width: 768px) {
     .auth-card {
         flex-direction: column;

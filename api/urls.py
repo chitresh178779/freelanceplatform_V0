@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, ProjectListCreateView, ProjectDetailView, BidCreateView, MyTokenObtainPairView, ProjectBidListView, BidUpdateView, MyBidsListView, MyProjectsListView, PublicUserProfileView, UserProfileUpdateView, SkillListCreateView, StripeOnboardingView, ProjectFundView, ProjectReleasePaymentView,UserSearchListView , ChatRoomListView, MessageListView, FollowerListView, FollowToggleView, FollowingListView
+from .views import RegisterView, ProjectListCreateView, ProjectDetailView, BidCreateView, MyTokenObtainPairView, ProjectBidListView, BidUpdateView, MyBidsListView, MyProjectsListView, PublicUserProfileView, UserProfileUpdateView, SkillListCreateView, StripeOnboardingView, ProjectFundView, ProjectReleasePaymentView,UserSearchListView , ChatRoomListView, MessageListView, FollowerListView, FollowToggleView, FollowingListView, ChatRoomCreateView
 
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -39,6 +39,7 @@ urlpatterns = [
     
     # --- NEW: Chat API URLs ---
     path('chats/', ChatRoomListView.as_view(), name='chat-room-list'),
+    path('chats/start/', ChatRoomCreateView.as_view(), name='chat-room-start'),
     path('chats/<int:room_id>/messages/', MessageListView.as_view(), name='message-list'),
     # --- END: Chat API URLs ---
 ]

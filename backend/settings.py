@@ -32,9 +32,9 @@ STRIPE_ENDPOINT_SECRET = os.getenv('STRIPE_ENDPOINT_SECRET')
 #     print(f"DEBUG: Stripe Key Loaded: {STRIPE_SECRET_KEY[:10]}...") # Print first 10 chars for confirmation
 # else:
 #     print("ERROR: STRIPE_SECRET_KEY not found in environment!")
-    # raise ImproperlyConfigured("STRIPE_SECRET_KEY not found...")
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+#     raise ImproperlyConfigured("STRIPE_SECRET_KEY not found...")
+# # Quick-start development settings - unsuitable for production
+# # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&z7td+7er2gsrauq_3--6$9-#p^gy)a5%ahup(j3ct19m306j8'

@@ -1,27 +1,26 @@
 // In src/pages/ChatPage.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom'; // Import useParams
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import useWebSocket from '../hooks/useWebSocket'; // Import the new hook
 import './ChatPage.css';
 
 function ChatPage() {
+    const { roomId } = useParams(); // Get room ID from URL, if provided
     const { user, authTokens, logoutUser } = useAuth();
     const [rooms, setRooms] = useState([]);
     const [selectedRoom, setSelectedRoom] = useState(null);
-    // Remove local messages state, it will come from the hook
-    // const [messages, setMessages] = useState([]); 
     const [newMessage, setNewMessage] = useState('');
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [error, setError] = useState('');
-    const messageListRef = useRef(null);
+    const messageListRef = useRef(null); // Ref for auto-scrolling
 
     // --- WebSocket Hook ---
     // Get messages, sendMessage function, and connection status from the hook
     const { messages, setMessages, sendMessage, isConnected } = useWebSocket(
-        selectedRoom?.id, // Pass selected room ID
+        selectedRoom?.id, // Pass selected room ID (null if none selected)
         authTokens?.access   // Pass the access token
     );
     // --- End WebSocket Hook ---
@@ -35,14 +34,32 @@ function ChatPage() {
             const response = await axios.get('http://127.0.0.1:8000/api/chats/', {
                 headers: { 'Authorization': `Bearer ${authTokens.access}` }
             });
-            setRooms(response.data.results || response.data);
-        } catch (err) { /* ... error handling ... */ } 
-        finally { setLoadingRooms(false); }
-    }, [authTokens, logoutUser]);
+            const fetchedRooms = response.data.results || response.data;
+            setRooms(fetchedRooms);
 
-    useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
+            // If a roomId is present in the URL, try to select it
+            if (roomId) {
+                const roomFromUrl = fetchedRooms.find(r => String(r.id) === String(roomId));
+                if (roomFromUrl) {
+                    // Call handleRoomSelect logic directly
+                    setSelectedRoom(roomFromUrl);
+                    setMessages([]); // Clear messages before fetching new ones
+                    fetchMessages(roomFromUrl.id); // Fetch historical messages
+                } else {
+                    console.warn(`Room ID ${roomId} from URL not found in user's rooms.`);
+                }
+            }
+
+        } catch (err) {
+            console.error("Error fetching chat rooms:", err);
+            setError('Failed to load chat rooms.');
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                logoutUser();
+            }
+        } finally {
+            setLoadingRooms(false);
+        }
+    }, [authTokens, logoutUser, roomId]); // Add roomId as dependency
 
     // 2. Fetch *past* messages when a room is selected
     const fetchMessages = useCallback(async (roomId) => {
@@ -54,15 +71,29 @@ function ChatPage() {
             });
             // Set the hook's messages state with history
             setMessages(response.data.results || response.data); 
-        } catch (err) { /* ... error handling ... */ } 
-        finally { setLoadingMessages(false); }
+        } catch (err) {
+            console.error("Error fetching messages:", err);
+            setError('Failed to load messages.');
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                logoutUser();
+            }
+        } finally {
+            setLoadingMessages(false);
+        }
     }, [authTokens, logoutUser, setMessages]); // Add setMessages to dependencies
 
-    // 3. Handle room selection
+    // Initial fetch for rooms
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
+
+    // 3. Handle room selection from the sidebar
     const handleRoomSelect = (room) => {
         setSelectedRoom(room); // This triggers the WebSocket hook to connect
         setMessages([]); // Clear old messages immediately
         fetchMessages(room.id); // Fetch historical messages
+        // Optionally update URL, though not strictly necessary if already on /chat/
+        // navigate(`/chat/${room.id}`, { replace: true });
     };
 
     // 4. Handle sending a message (NOW REAL)
@@ -84,7 +115,7 @@ function ChatPage() {
 
     // --- Render ---
     if (loadingRooms) return <div className="loading-message">Loading chats...</div>;
-    if (error) return <div className="error-message">{error}</div>;
+    if (error && !loadingRooms) return <div className="error-message">{error}</div>; // Show error only after room load attempt
 
     return (
         <div className="chat-page-container">
@@ -101,7 +132,8 @@ function ChatPage() {
                                     onClick={() => handleRoomSelect(room)}
                                 >
                                     <span className="room-name">
-                                        {room.participants.filter(name => name !== user.username).join(', ') || 'Chat'}
+                                        {/* Show other participants, not the current user */}
+                                        {room.participants.filter(name => name !== user?.username).join(', ') || 'Chat'}
                                     </span>
                                     {room.last_message && (
                                         <span className="room-last-message">
@@ -122,7 +154,7 @@ function ChatPage() {
                         <>
                             <div className="chat-header">
                                 <h3>
-                                    Chat with {selectedRoom.participants.filter(name => name !== user.username).join(', ')}
+                                    Chat with {selectedRoom.participants.filter(name => name !== user?.username).join(', ')}
                                 </h3>
                                 <span className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
                                     {isConnected ? '• Connected' : '• Disconnected'}
@@ -136,14 +168,15 @@ function ChatPage() {
                                     messages.map(msg => (
                                         <div
                                             key={msg.id} // Use msg.id
-                                            className={`message-item ${msg.sender_username === user.username ? 'sent' : 'received'}`}
+                                            className={`message-item ${msg.sender_username === user?.username ? 'sent' : 'received'}`}
                                         >
                                             <span className="message-sender">
-                                                {msg.sender_username}
+                                                {/* Only show sender name if it's not the current user */}
+                                                {msg.sender_username !== user?.username && msg.sender_username}
                                             </span>
                                             <p className="message-content">{msg.content}</p>
                                             <span className="message-timestamp">
-                                                {new Date(msg.timestamp).toLocaleTimeString()}
+                                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     ))

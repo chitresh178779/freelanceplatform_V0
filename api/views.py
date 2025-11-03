@@ -4,7 +4,7 @@ from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Project, Bid, Skill, ChatRoom, Message, Follow
-from django.db.models import Q
+from django.db.models import Q, Count
 from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -124,6 +124,7 @@ class BidUpdateView(generics.UpdateAPIView):
             # Assign freelancer and update project status
             project.freelancer = instance.freelancer
             project.status = Project.Status.IN_PROGRESS
+            project.budget = instance.amount
             print(f"[BidUpdateView] Assigning Freelancer ID {project.freelancer.pk} and setting Project Status to {project.status}...")
             project.save() # SAVE THE PROJECT CHANGES
             print("[BidUpdateView] Project saved.")
@@ -622,6 +623,52 @@ class MessageListView(generics.ListAPIView):
         # If not a participant, return an empty list
         return Message.objects.none()
 
+class ChatRoomCreateView(generics.CreateAPIView):
+    """
+    API view to find an existing 1-on-1 chat room or create a new one.
+    Expects {"username": "username_to_chat_with"} in the POST body.
+    """
+    serializer_class = ChatRoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user_to_chat_with_username = request.data.get('username')
+        if not user_to_chat_with_username:
+            return Response({"error": "Username is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_to_chat_with = User.objects.get(username=user_to_chat_with_username)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if user == user_to_chat_with:
+            return Response({"error": "You cannot start a chat with yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find rooms that have *exactly 2* participants,
+        # and both participants are the request.user and the target user.
+        existing_room = ChatRoom.objects.annotate(
+            participant_count=Count('participants')
+        ).filter(
+            participant_count=2,
+            participants=user
+        ).filter(
+            participants=user_to_chat_with
+        ).first()
+
+        if existing_room:
+            # A room already exists, return it
+            print(f"Found existing room ID: {existing_room.id}")
+            serializer = self.get_serializer(existing_room)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Create new room if none found
+        print(f"Creating new chat room for {user.username} and {user_to_chat_with.username}")
+        new_room = ChatRoom.objects.create()
+        new_room.participants.add(user, user_to_chat_with)
+        
+        serializer = self.get_serializer(new_room)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 # --- END: Chat API Views ---
 
 # --- NEW: Follow/Unfollow Views ---
