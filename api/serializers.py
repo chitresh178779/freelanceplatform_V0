@@ -312,3 +312,13 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
                  if data.get('company_name'): raise serializers.ValidationError({"company_name": "Freelancers cannot set company information."})
                  if data.get('company_website'): raise serializers.ValidationError({"company_website": "Freelancers cannot set company information."})
         return data
+
+class FreelancerMatchSerializer(PublicUserProfileSerializer):
+    """
+    Extends the public profile serializer to add a 'match_score'.
+    """
+    match_score = serializers.FloatField(read_only=True)
+
+    class Meta(PublicUserProfileSerializer.Meta): # Inherit Meta
+        # Get all fields from parent and add the new one
+        fields = PublicUserProfileSerializer.Meta.fields + ['match_score']

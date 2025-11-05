@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import UserSearchCard from '../components/UserSearchCard';
 import './ManageBidsPage.css';
 
 function ManageBidsPage() {
@@ -14,6 +15,9 @@ function ManageBidsPage() {
     const [actionError, setActionError] = useState('');
     const { user, authTokens, logoutUser } = useAuth();
     const navigate = useNavigate();
+    const [matches, setMatches] = useState([]);
+    const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+    const [matchError, setMatchError] = useState('');
 
     const fetchBids = useCallback(async () => {
         if (!authTokens || !user || user.role !== 'CLIENT') {
@@ -77,6 +81,27 @@ function ManageBidsPage() {
         }
     };
 
+    const handleFindMatches = async () => {
+        setIsLoadingMatches(true);
+        setMatchError('');
+        setMatches([]); // Clear previous matches
+        try {
+            const response = await axios.get(
+                `http://127.0.0.1:8000/api/projects/${projectId}/match/`,
+                { headers: { 'Authorization': `Bearer ${authTokens.access}` } }
+            );
+            setMatches(response.data.results || response.data); // Handle pagination
+        } catch (err) {
+            console.error("Error fetching matches:", err);
+            setMatchError('Could not find matches at this time.');
+             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                 logoutUser();
+             }
+        } finally {
+            setIsLoadingMatches(false);
+        }
+    };
+
     if (loading) return <div className="loading-message">Loading bids...</div>;
     if (error) return <div className="error-message">{error}</div>;
 
@@ -91,6 +116,29 @@ function ManageBidsPage() {
                  <p className="empty-message">No bids have been placed on this project yet.</p>
             )}
             {pendingBids.length > 0 && <h2>Pending Bids</h2>}
+            <div className="matchmaking-section">
+                <h2>AI Recommendations</h2>
+                <p>Find top freelancers who match your project's required skills, even if they haven't bid yet.</p>
+                <button 
+                    className="find-matches-button" 
+                    onClick={handleFindMatches}
+                    disabled={isLoadingMatches}
+                >
+                    {isLoadingMatches ? 'Finding...' : 'Find Top Matches'}
+                </button>
+                {matchError && <p className="error-message">{matchError}</p>}
+                {/* Results Grid */}
+                {matches.length > 0 && (
+                    <div className="match-results-grid">
+                        {matches.map(freelancer => (
+                            <UserSearchCard key={freelancer.id} user={freelancer} />
+                        ))}
+                    </div>
+                )}
+                {!isLoadingMatches && matches.length === 0 && !matchError && (
+                    <p className="empty-message-small">No matches found based on your criteria.</p>
+                )}
+            </div>
             <div className="bid-list">
                 {pendingBids.map(bid => (
                     <div key={bid.id} className="manage-bid-card pending">

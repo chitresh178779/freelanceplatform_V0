@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, ProjectListCreateView, ProjectDetailView, BidCreateView, MyTokenObtainPairView, ProjectBidListView, BidUpdateView, MyBidsListView, MyProjectsListView, PublicUserProfileView, UserProfileUpdateView, SkillListCreateView, StripeOnboardingView, ProjectFundView, ProjectReleasePaymentView,UserSearchListView , ChatRoomListView, MessageListView, FollowerListView, FollowToggleView, FollowingListView, ChatRoomCreateView
+from .views import RegisterView, ProjectListCreateView, ProjectDetailView, BidCreateView, MyTokenObtainPairView, ProjectBidListView, BidUpdateView, MyBidsListView, MyProjectsListView, PublicUserProfileView, UserProfileUpdateView, SkillListCreateView, StripeOnboardingView, ProjectFundView, ProjectReleasePaymentView,UserSearchListView , ChatRoomListView, MessageListView, FollowerListView, FollowToggleView, FollowingListView, ChatRoomCreateView, ProjectMatchView
 
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -36,6 +36,7 @@ urlpatterns = [
     path('stripe/onboard/', StripeOnboardingView.as_view(), name='stripe-onboard'),
     path('projects/<int:project_pk>/fund/', ProjectFundView.as_view(), name='project-fund'),
     path('projects/<int:project_pk>/release/', ProjectReleasePaymentView.as_view(), name='project-release'),
+    path('projects/<int:project_pk>/match/', ProjectMatchView.as_view(), name='project-match'),
     
     # --- NEW: Chat API URLs ---
     path('chats/', ChatRoomListView.as_view(), name='chat-room-list'),

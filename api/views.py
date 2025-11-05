@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Project, Bid, Skill, ChatRoom, Message, Follow
 from django.db.models import Q, Count
-from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer
+from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer, FreelancerMatchSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,8 +13,10 @@ from rest_framework import filters
 from .permissions import IsClient, IsFreelancer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.shortcuts import get_object_or_404 # Import this
-from django.core.exceptions import ValidationError # Import this
+from django.shortcuts import get_object_or_404 
+from django.core.exceptions import ValidationError 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Create your views here.
 
@@ -757,3 +759,103 @@ class FollowingListView(generics.ListAPIView):
         return User.objects.filter(followers__follower=user)
 
 # --- END: Follow/Unfollow Views ---
+class ProjectMatchView(generics.ListAPIView):
+    """
+    API view to find and rank the best-suited freelancers for a specific project.
+    Accessible via /api/projects/<project_pk>/match/
+    """
+    serializer_class = FreelancerMatchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        project_pk = self.kwargs.get('project_pk')
+        try:
+            project = Project.objects.get(pk=project_pk)
+        except Project.DoesNotExist:
+            print("[MatchView] Error: Project not found.")
+            return []
+
+        # --- 1. Hard Filter ---
+        
+        # Get project's required skills, format them (lowercase, stripped)
+        required_skills_list = [
+            skill.strip().lower() 
+            for skill in project.skills_required.split(',') 
+            if skill.strip()
+        ]
+        
+        if not required_skills_list:
+            print("[MatchView] Project has no required skills listed. Returning empty.")
+            return []
+        
+        print(f"[MatchView] Project requires skills: {required_skills_list}")
+
+        # --- THIS IS THE CORRECTED FILTER ---
+        # Build a case-insensitive Q object query
+        # This will create a query like: Q(name__iexact='react') | Q(name__iexact='django') | ...
+        skill_queries = Q()
+        for skill_name in required_skills_list:
+            skill_queries |= Q(name__iexact=skill_name) # 'iexact' is case-insensitive
+        
+        # Find all Skill objects that match the project's required skills
+        matching_skills = Skill.objects.filter(skill_queries)
+        # --- END CORRECTED FILTER ---
+
+        if not matching_skills.exists():
+            print(f"[MatchView] No Skill objects found in database for: {required_skills_list}")
+            return []
+
+        print(f"[MatchView] Found {matching_skills.count()} matching Skill objects in DB.")
+
+        # Find freelancers who are:
+        # 1. FREELANCER role
+        # 2. 'Available for Hire'
+        # 3. Have AT LEAST ONE of the matching Skill objects
+        candidate_freelancers = User.objects.filter(
+            role=User.Role.FREELANCER,
+            availability=User.Availability.AVAILABLE,
+            skills__in=matching_skills # Use the queryset of matching skills
+        ).distinct().prefetch_related('skills')
+        
+        if not candidate_freelancers.exists():
+            print("[MatchView] No candidates found. (Check Freelancer Availability?)")
+            return [] 
+
+        print(f"[MatchView] Found {candidate_freelancers.count()} candidates passing hard filter.")
+
+        # --- 2. "AI" Scoring (TF-IDF) ---
+        
+        project_text = f"{project.title} {project.description} {' '.join(required_skills_list)}"
+        corpus = [project_text]
+        freelancers_in_order = [] 
+        
+        for freelancer in candidate_freelancers:
+            skill_names = ' '.join([s.name for s in freelancer.skills.all()])
+            freelancer_text = f"{freelancer.name} {freelancer.bio} {skill_names}"
+            corpus.append(freelancer_text)
+            freelancers_in_order.append(freelancer)
+        
+        # 3. --- Vectorize and Calculate Similarity ---
+        try:
+            vectorizer = TfidfVectorizer(stop_words='english', min_df=1)
+            tfidf_matrix = vectorizer.fit_transform(corpus)
+            cosine_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])[0]
+
+            # 4. --- Combine and Rank ---
+            ranked_freelancers = []
+            for i, freelancer in enumerate(freelancers_in_order):
+                freelancer.match_score = cosine_scores[i] 
+                ranked_freelancers.append(freelancer)
+            
+            ranked_freelancers.sort(key=lambda x: x.match_score, reverse=True)
+            
+            print(f"[MatchView] Returning {len(ranked_freelancers)} ranked freelancers.")
+            return ranked_freelancers
+
+        except ValueError as e:
+            print(f"[MatchView] TF-IDF Error (e.g., empty vocabulary, all bios are empty): {e}")
+            for f in candidate_freelancers: f.match_score = 0.0
+            return candidate_freelancers
+        except Exception as e:
+            print(f"[MatchView] Error during matching: {e}")
+            return []
