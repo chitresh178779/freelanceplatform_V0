@@ -5,12 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import User, Project, Bid, Skill, ChatRoom, Message, Follow
 from django.db.models import Q, Count
-from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer, FreelancerMatchSerializer
+from .serializers import UserSerializer, ProjectSerializer, BidSerializer, MyTokenObtainPairSerializer, PublicUserProfileSerializer, UserProfileUpdateSerializer, SkillSerializer, ChatRoomSerializer, MessageSerializer, FreelancerMatchSerializer, WorkSubmissionSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
-from .permissions import IsClient, IsFreelancer
+from .permissions import IsClient, IsFreelancer, IsAssignedFreelancer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404 
@@ -531,8 +531,8 @@ class ProjectReleasePaymentView(APIView):
                  return Response({"error": "You do not own this project."}, status=status.HTTP_403_FORBIDDEN)
 
             # 2. Project must be IN_PROGRESS
-            if project.status != Project.Status.IN_PROGRESS:
-                 return Response({"error": f"Payment can only be released for 'IN PROGRESS' projects (current: {project.status})."}, status=status.HTTP_400_BAD_REQUEST)
+            if project.status != Project.Status.PENDING_APPROVAL:
+                 return Response({"error": f"Payment can only be released for 'PENDING APPROVAL' projects (current: {project.status})."}, status=status.HTTP_400_BAD_REQUEST)
 
             # 3. Project must have a Payment Intent ID
             if not project.payment_intent_id:
@@ -584,6 +584,49 @@ class ProjectReleasePaymentView(APIView):
             return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # --- END Release Payment View ---
+
+class WorkSubmissionView(generics.UpdateAPIView):
+    """
+    API view for the assigned freelancer to submit work.
+    Updates submission fields and changes status to PENDING_APPROVAL.
+    Accessible via PATCH /api/projects/<pk>/submit/
+    """
+    queryset = Project.objects.all()
+    serializer_class = WorkSubmissionSerializer # Use the simple serializer
+    permission_classes = [permissions.IsAuthenticated, IsAssignedFreelancer] # Must be the assigned freelancer
+    lookup_field = 'pk'
+
+    def update(self, request, *args, **kwargs):
+        project = self.get_object() # Get the project
+        
+        # Check project status
+        if project.status != Project.Status.IN_PROGRESS:
+            return Response(
+                {"error": f"Work can only be submitted for 'IN PROGRESS' projects (current: {project.status})."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if project is funded (optional but good)
+        if not project.payment_intent_id:
+             return Response(
+                {"error": "Cannot submit work. Project has not been funded by the client yet."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Use the serializer to validate and update submission_notes/submission_file
+        serializer = self.get_serializer(project, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save() # This saves notes/file
+
+        # Manually update the status
+        project.status = Project.Status.PENDING_APPROVAL
+        project.save(update_fields=['status'])
+        
+        print(f"Work submitted for project {project.pk}, status changed to PENDING_APPROVAL.")
+
+        # Return the full project data
+        full_serializer = ProjectSerializer(project, context={'request': request})
+        return Response(full_serializer.data, status=status.HTTP_200_OK)
 
 # --- NEW: Chat API Views ---
 

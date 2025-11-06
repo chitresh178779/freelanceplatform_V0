@@ -306,6 +306,137 @@ body.dark .status-completed { background-color: rgba(40, 167, 69, 0.2); color: #
 }
 .back-link:hover { color: var(--text-accent); text-decoration: underline; }
 
+.status-pending_approval {
+    background-color: rgba(255, 159, 64, 0.15); /* Orange */
+    color: #ff9f40;
+}
+body.dark .status-pending_approval {
+    background-color: rgba(255, 159, 64, 0.2);
+    color: #ffb16a;
+}
+
+.submission-review-box {
+    padding: 15px 20px;
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+    margin-bottom: 20px;
+}
+.submission-review-box strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.submission-notes {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+.submission-file-link a {
+    color: var(--text-accent);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 10px;
+}
+.submission-file-link a:hover {
+    text-decoration: underline;
+}
+/* --- END NEW --- */
+
+
+.divider { /* ... (existing) ... */ }
+
+/* Description, Skills */
+.detail-description h2, .detail-skills h2 { /* ... (existing) ... */ }
+.detail-description p { /* ... (existing) ... */ }
+.detail-skills { /* ... (existing) ... */ }
+.skills-list { /* ... (existing) ... */ }
+.skill-tag { /* ... (existing) ... */ }
+
+
+/* --- NEW: Work Submission Form (for Freelancer) --- */
+.submission-section {
+    margin-top: 30px;
+    /* Uses the hr divider above it */
+}
+.submission-section h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+.submission-section p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+.submission-form {
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.2);
+}
+.submission-form .form-group {
+    margin-bottom: 15px;
+}
+.submission-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.submission-form .form-group textarea,
+.submission-form .form-group .file-input-simple {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+    background-color: rgba(var(--translucent-bg-rgb), 0.1);
+    border: 1px solid rgba(var(--translucent-border-rgb), 0.3);
+    color: var(--text-primary);
+}
+.submission-form .form-group .file-input-simple {
+    padding: 10px; /* Adjust padding for file input */
+}
+body:not(.dark) .submission-form .form-group textarea,
+body:not(.dark) .submission-form .form-group .file-input-simple {
+     background-color: rgba(var(--translucent-bg-rgb), 0.15);
+     border-color: rgba(var(--translucent-border-rgb), 0.3);
+     color: var(--text-primary);
+}
+.submission-form .form-group textarea:focus,
+.submission-form .form-group .file-input-simple:focus {
+     background-color: rgba(var(--translucent-bg-rgb), 0.2);
+     outline: none;
+     border-color: var(--text-accent);
+}
+.submission-form .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+.submit-work-button {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-on-cta);
+    background-color: var(--text-accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.submit-work-button:hover:not(:disabled) {
+    opacity: 0.85;
+}
+.submit-work-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Messages */
 .loading-message, .error-message, .no-projects-message {
     text-align: center; padding: 40px; font-size: 1.1rem;

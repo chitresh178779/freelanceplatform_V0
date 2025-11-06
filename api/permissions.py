@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission
-from .models import User
+from rest_framework import permissions
+from .models import User, Bid, Project
 
 class IsClient(BasePermission):
     """
@@ -18,3 +19,13 @@ class IsFreelancer(BasePermission):
             request.user.is_authenticated and
             request.user.role == User.Role.FREELANCER # Use Enum/Choices value
         )
+
+class IsAssignedFreelancer(permissions.BasePermission):
+    """
+    Object-level permission to only allow the assigned freelancer to interact.
+    Assumes the view is operating on a Project object.
+    """
+    def has_object_permission(self, request, view, obj):
+        if isinstance(obj, Project):
+            return obj.freelancer == request.user
+        return False

@@ -31,6 +31,12 @@ function ProjectDetailPage() {
     const [isReleasingPayment, setIsReleasingPayment] = useState(false);
     const [releaseError, setReleaseError] = useState('');
 
+    // --- NEW: States for Work Submission ---
+    const [submissionNotes, setSubmissionNotes] = useState('');
+    const [submissionFile, setSubmissionFile] = useState(null);
+    const [isSubmittingWork, setIsSubmittingWork] = useState(false);
+    const [submissionError, setSubmissionError] = useState('');
+
     // --- Wrap fetchProject in useCallback ---
     const fetchProject = useCallback(async () => {
         setLoading(true); setError(null);
@@ -180,6 +186,48 @@ function ProjectDetailPage() {
         }
     };
 
+    const handleWorkSubmit = async (e) => {
+        e.preventDefault();
+        if (!submissionNotes && !submissionFile) {
+            setSubmissionError('You must provide either notes or a file for submission.');
+            return;
+        }
+        
+        setIsSubmittingWork(true);
+        setSubmissionError('');
+
+        const formData = new FormData();
+        formData.append('submission_notes', submissionNotes);
+        if (submissionFile) {
+            formData.append('submission_file', submissionFile);
+        }
+
+        try {
+            await axios.patch( // Use PATCH to update
+                `http://127.0.0.1:8000/api/projects/${projectId}/submit/`,
+                formData,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${authTokens.access}`,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+            alert('Work submitted successfully! The client will be notified.');
+            fetchProject(); // Refresh project data to show new status
+        } catch (err) {
+            console.error("Error submitting work:", err.response?.data || err.message);
+            const errorMsg = err.response?.data?.error || err.response?.data?.detail || 'Could not submit work.';
+            setSubmissionError(errorMsg);
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                 logoutUser();
+                 navigate('/login');
+            }
+        } finally {
+            setIsSubmittingWork(false);
+        }
+    };
+
     // --- Render Logic ---
     if (loading) return <div className="loading-message">Loading project...</div>;
     if (error) return <div className="error-message">{error}</div>;
@@ -189,9 +237,11 @@ function ProjectDetailPage() {
     const categoryDisplay = project.category ? project.category.replace(/^\w/, c => c.toUpperCase()) : 'N/A';
     const canBid = user && user.role === 'FREELANCER' && project?.status === 'OPEN' && !project?.freelancer;
     const isOwner = user && String(user.user_id) === String(project?.client);
+    const isAssignedFreelancer = user && String(user.user_id) === String(project?.freelancer);
     const canFund = isOwner && project?.status === 'IN_PROGRESS' && !project?.payment_intent_id;
     const isFunded = project?.payment_intent_id && project.status === 'IN_PROGRESS';
     const canRelease = isOwner && project?.status === 'IN_PROGRESS' && project?.payment_intent_id;
+    const canSubmitWork = isAssignedFreelancer && project?.status === 'IN_PROGRESS' && project?.payment_intent_id;
 
 
      return (
@@ -251,6 +301,39 @@ function ProjectDetailPage() {
                         <p className="funding-info-message">✔ Project Escrow Funded. Waiting for completion.</p>
                     )}
                  </div>
+                    {/* --- Submit Work Section (for Freelancer) --- */}
+                    {canSubmitWork && (
+                        <div className="submission-section">
+                            <hr className="divider" />
+                            <h2>Submit Your Work</h2>
+                            <p>The project is funded. Submit your work and notes for the client to review.</p>
+                            <form className="submission-form" onSubmit={handleWorkSubmit}>
+                                {submissionError && <p className="error-message">{submissionError}</p>}
+                                <div className="form-group">
+                                    <label htmlFor="submission_notes">Submission Notes (Optional)</label>
+                                    <textarea
+                                        id="submission_notes"
+                                        rows="5"
+                                        value={submissionNotes}
+                                        onChange={(e) => setSubmissionNotes(e.target.value)}
+                                        placeholder="Add any notes for the client, links to live previews, etc."
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="submission_file">Attach File (Optional)</label>
+                                    <input
+                                        id="submission_file"
+                                        type="file"
+                                        onChange={(e) => setSubmissionFile(e.target.files[0])}
+                                        className="file-input-simple"
+                                    />
+                                </div>
+                                <button type="submit" className="submit-work-button" disabled={isSubmittingWork}>
+                                    {isSubmittingWork ? 'Submitting...' : 'Submit Work for Approval'}
+                                </button>
+                            </form>
+                        </div>
+                    )}
 
                  {/* Release Payment Section */}
                  {canRelease && (

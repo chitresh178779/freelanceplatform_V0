@@ -211,7 +211,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             'skills_required', # ADDED skills_required
             'created_at',
             'updated_at', # Include updated_at
-            'payment_intent_id'
+            'payment_intent_id',
+            'submission_notes', 
+            'submission_file'
         ]
         # Make sure client, status, created_at, updated_at, category_display and freelancer are read-only during creation
         # category and skills_required MUST BE WRITABLE (i.e., NOT in read_only_fields)
@@ -222,7 +224,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             'created_at', 
             'updated_at', 
             'freelancer', # Freelancer is assigned later, not on creation
-            'payment_intent_id'
+            'payment_intent_id',
+            'submission_notes', 
+            'submission_file'
         ]
         def validate(self, data):
             if data.get('amount') is not None and data['amount'] <= 0:
@@ -322,3 +326,16 @@ class FreelancerMatchSerializer(PublicUserProfileSerializer):
     class Meta(PublicUserProfileSerializer.Meta): # Inherit Meta
         # Get all fields from parent and add the new one
         fields = PublicUserProfileSerializer.Meta.fields + ['match_score']
+
+class WorkSubmissionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the freelancer to submit their work.
+    Only allows writing to the submission fields.
+    """
+    class Meta:
+        model = Project
+        fields = ['submission_notes', 'submission_file']
+        extra_kwargs = {
+            'submission_notes': {'required': False},
+            'submission_file': {'required': False},
+        }

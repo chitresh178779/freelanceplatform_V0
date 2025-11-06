@@ -109,6 +109,7 @@ class Project(models.Model):
     class Status(models.TextChoices):
         OPEN = "OPEN", "Open"
         IN_PROGRESS = "IN_PROGRESS", "In Progress"
+        PENDING_APPROVAL = "PENDING_APPROVAL", "Pending Approval"
         COMPLETED = "COMPLETED", "Completed"
 
     # --- CATEGORY CHOICES (Example) ---
@@ -138,6 +139,13 @@ class Project(models.Model):
         help_text="Comma-separated list of required skills (e.g., Python,React,CSS)"
     )
     # --- END NEW FIELDS ---
+    submission_notes = models.TextField(blank=True, help_text="Freelancer's notes for the submission.")
+    submission_file = models.FileField(
+        upload_to='submissions/', # Saves to MEDIA_ROOT/submissions/
+        null=True, 
+        blank=True,
+        help_text="File submitted by the freelancer (e.g., .zip, .pdf)"
+    )
     
     # Relationships - Use the dynamically fetched user model here
     client = models.ForeignKey(ActiveUser, on_delete=models.CASCADE, related_name="projects_as_client")
