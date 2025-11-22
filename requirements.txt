@@ -1,0 +1,15 @@
+Django>=5.0
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-filter
+Pillow
+channels
+daphne
+stripe
+python-dotenv
+scikit-learn
+numpy
+scipy
+asgiref
+sqlparse
